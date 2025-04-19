@@ -1,7 +1,7 @@
 {
   "name": "koishi-plugin-dwrg",
-  "description": "自动获取网易第五人格资讯并主动推送(测试版)",
-  "version": "0.1.0",
+  "description": "自动获取网易第五人格资讯并主动推送",
+  "version": "0.2.0",
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "files": [
@@ -13,7 +13,11 @@
   "keywords": [
     "chatbot",
     "koishi",
-    "plugin"
+    "plugin",
+    "第五人格",
+    "info",
+    "news",
+    "dwrg"
   ],
   "devDependencies": {
     "koishi-plugin-markdown-to-image-service": "^1.2.5"
