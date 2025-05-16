@@ -1,0 +1,220 @@
+export class text {
+    /**
+     * 分析更新内容，判断是全量更新还是增量更新
+     * @param oldText 旧文本
+     * @param newText 新文本
+     * @returns 如果是增量更新，返回变更内容；如果是全量更新，返回null
+     */
+    static analyzeUpdate(oldText: string, newText: string): {
+        isFullUpdate: boolean,
+        changes?: { type: 'add' | 'delete' | 'modify', content: string, position: number }[]
+    } {
+        // 如果新旧文本完全相同，则没有更新
+        if (oldText === newText) {
+            return { isFullUpdate: false, changes: [] };
+        }
+
+        // 如果新旧文本相似度过低，认为是全量更新
+        const similarity = this.calculateSimilarity(oldText, newText);
+        if (similarity < 0.3) { // 相似度阈值可以根据实际情况调整
+            return { isFullUpdate: true };
+        }
+
+        // 使用Myers算法计算差异
+        const changes = this.myersDiff(oldText, newText);
+        return { isFullUpdate: false, changes };
+    }
+
+    /**
+     * 计算两段文本的相似度
+     * @param oldText 旧文本
+     * @param newText 新文本
+     * @returns 相似度，范围0-1
+     */
+    private static calculateSimilarity(oldText: string, newText: string): number {
+        // 使用Jaccard相似系数计算相似度
+        const oldSet = new Set(oldText.split(/\s+/));
+        const newSet = new Set(newText.split(/\s+/));
+        // 计算交集大小
+        const intersection = new Set([...oldSet].filter(x => newSet.has(x)));
+        // 计算并集大小
+        const union = new Set([...oldSet, ...newSet]);
+        // 返回Jaccard相似系数
+        return intersection.size / union.size;
+    }
+
+    /**
+     * Myers差分算法实现
+     * @param oldText 旧文本
+     * @param newText 新文本
+     * @returns 变更内容数组
+     */
+    static myersDiff(oldText: string, newText: string): {
+        type: 'add' | 'delete' | 'modify',
+        content: string,
+        position: number
+    }[] {
+        // 将文本分割成行
+        const oldLines = oldText.split('\n');
+        const newLines = newText.split('\n');
+
+        // 初始化结果数组
+        const changes: { type: 'add' | 'delete' | 'modify', content: string, position: number }[] = [];
+
+        // 特殊情况处理：如果其中一个文本为空
+        if (oldLines.length === 0) {
+            // 旧文本为空，全部是添加操作
+            for (let i = 0; i < newLines.length; i++) {
+                changes.push({
+                    type: 'add',
+                    content: newLines[i],
+                    position: i
+                });
+            }
+            return changes;
+        }
+        if (newLines.length === 0) {
+            // 新文本为空，全部是删除操作
+            for (let i = 0; i < oldLines.length; i++) {
+                changes.push({
+                    type: 'delete',
+                    content: oldLines[i],
+                    position: i
+                });
+            }
+            return changes;
+        }
+
+        // 实现Myers差分算法
+        const MAX = oldLines.length + newLines.length;
+
+        const v: number[] = new Array(2 * MAX + 1).fill(-1);
+        const vHis: Array<number[]> = [];
+
+        let x, y;
+        v[1] = 0;
+        for (let d = 0; d <= MAX; d++) {
+            vHis.push([...v]);
+
+            for (let k = -d; k <= d; k += 2) {
+                if (k == -d || (k != d && this.getX(v, k - 1) < this.getX(v, k + 1))) {
+                    x = this.getX(v, k + 1);
+                } else {
+                    x = this.getX(v, k - 1) + 1;
+                }
+
+                y = x - k;
+
+                while (x < N && y < M && this.equals(a[x], b[y])) {
+                    x++;
+                    y++;
+                }
+
+                this.setX(v, k, x);
+
+                if (x >= N && y >= M) {
+                    return [d, k, vHis];
+                }
+            }
+        }
+
+        // 回溯计算编辑操作
+        x = oldLines.length;
+        y = newLines.length;
+
+        for (let d = trace.length - 1; d >= 0; d--) {
+            const V = trace[d];
+            const k = x - y;
+
+            let prevK, prevX, prevY;
+
+            if (k === -d || (k !== d && V[MAX + k - 1] < V[MAX + k + 1])) {
+                prevK = k + 1;
+            } else {
+                prevK = k - 1;
+            }
+
+            prevX = V[MAX + prevK];
+            prevY = prevX - prevK;
+
+            // 处理对角线移动（匹配）
+            while (x > prevX && y > prevY) {
+                x--;
+                y--;
+            }
+
+            // 确保所有变更都被记录
+            if (x !== prevX || y !== prevY) {
+                if (x === prevX) {
+                    // 插入操作
+                    changes.unshift({
+                        type: 'add',
+                        content: newLines[y],
+                        position: x
+                    });
+                } else {
+                    // 删除操作
+                    changes.unshift({
+                        type: 'delete',
+                        content: oldLines[x],
+                        position: x
+                    });
+                }
+            }
+            x = prevX;
+            y = prevY;
+        }
+
+        // 处理首部残留
+        while (x > 0) {
+            changes.unshift({
+                type: 'delete',
+                content: oldLines[x - 1],
+                position: x - 1
+            });
+            x--;
+        }
+        while (y > 0) {
+            changes.unshift({
+                type: 'add',
+                content: newLines[y - 1],
+                position: 0
+            });
+            y--;
+        }
+
+        // 合并相邻的变更为修改操作
+        this.mergeChanges(changes);
+
+        return changes;
+    }
+
+    /**
+ * 合并相邻的添加和删除操作为修改操作
+ * @param changes 变更数组
+ */
+    private static mergeChanges(changes: {
+        type: 'add' | 'delete' | 'modify',
+        content: string,
+        position: number
+    }[]): void {
+        for (let i = 0; i < changes.length - 1; i++) {
+            const current = changes[i];
+            const next = changes[i + 1];
+
+            // 如果当前是删除，下一个是添加，且位置相近，则合并为修改
+            if (current.type === 'delete' && next.type === 'add' &&
+                (next.position - current.position <= 1)) {
+                changes[i] = {
+                    type: 'modify',
+                    content: `${current.content} -> ${next.content}`,
+                    position: current.position
+                };
+
+                // 删除下一个变更
+                changes.splice(i + 1, 1);
+                i--;
+            }
+        }
+    }
+}

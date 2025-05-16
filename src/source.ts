@@ -5,11 +5,22 @@ export class source {
      * @param ctx 
      * @returns 将返回markdown格式的字符串
      */
-    async getNotice(ctx: Context): Promise<string> {
-        let res = await ctx.http.get('https://h55.update.netease.com/h55_notice_version2.txt')
+    static async getNotice(ctx: Context): Promise<string> {
+        let res: string = await ctx.http.get('https://h55.update.netease.com/h55_notice_version2.txt')
+        res = await this.NoticeToMarkdown_v2(res)
+        return res
+    }
+
+    static async getTestNotice(ctx: Context): Promise<string> {
+        let res: string = await ctx.http.get('https://h55.update.netease.com/h55_notice_gongyan_version2.txt')
+        res = await this.NoticeToMarkdown_v2(res)
+        return res
+    }
+
+    static async NoticeToMarkdown_v2(notice: string): Promise<string> {
 
         // 合并 <te> 和紧随其后的 <c2> 为同一个引用块
-        res = res.replace(/<te>(.*?)<\/te>\s*<c2>(.*?)<\/c2>/gs, (match, p1, p2) => {
+        let res = notice.replace(/<te>(.*?)<\/te>\s*<c2>(.*?)<\/c2>/gs, (match, p1, p2) => {
             return `> **${p1}**\n> ${p2.trim()}\n`;
         });
 
@@ -40,25 +51,6 @@ export class source {
         // 处理颜色标记
         res = res.replace(/#c([0-9a-f]{6})(.*?)#n/g, '<span style="color:#$1">**$2**</span>');
 
-        return res
-    }
-
-    async getTestNotice(ctx: Context): Promise<string> {
-        let res: string = await ctx.http.get('https://h55.update.netease.com/h55_notice_release_test.txt')
-
-        res = res.replace(/#c([0-9a-fA-F]{6})(.*?)#n/g, (_, color, text) => {
-            return `<span style="color:#${color}">**${text}**</span>`;
-        });
-        // 破折号转为无序列表
-        res = res.replace(/——\s*/g, '- ');
-        // 连续等号转为分页符
-        res = res.replace(/={3,}/g, '\n---\n');
-        // 处理换行标记
-        res = res.replace(/#r/g, '\n');
-        // 去除多余空行
-        res = res.replace(/\n{3,}/g, '\n\n');
-
-        res = `${res}`;
         return res;
     }
 }

@@ -1,9 +1,10 @@
 import { Context, h } from 'koishi'
 import { } from 'koishi-plugin-markdown-to-image-service';
 
-import { source } from './source'
+import { registerCommand } from './command';
 import { ScheduleManager } from './ScheduleManager';
 import { file } from './file'
+import { Diff } from './diff'
 import { Config } from './config'
 import path from 'path'
 
@@ -14,27 +15,25 @@ export const inject = {
 }
 export {Config}
 
-const sourceInstance = new source()
-
 export function apply(ctx: Context, cfg: Config) {
   fileInstance = new file(path.join(ctx.baseDir, 'data', 'dwrg'))
 
   if (cfg.schedule_enable && cfg.schedule_channels.length) {
-    const manager = new ScheduleManager(ctx, cfg, fileInstance)
-    manager.start()
+    ScheduleManager.start(ctx, cfg, fileInstance)
     // 插件卸载时停止定时任务
-    ctx.on('dispose', () => manager.stop())
+    ctx.on('dispose', () => ScheduleManager.stop())
   }
 
-  ctx.command('dw').action(async ({ session }) => {
-    const message = await sourceInstance.getNotice(ctx)
-    const imageBuffer = await ctx.markdownToImage.convertToImage(message);
-    session.send(h.image(imageBuffer, 'image/png'))
-  })
+  registerCommand(ctx)
 
-  ctx.command('dwts').action(async ({ session }) => {
-    const message = await sourceInstance.getTestNotice(ctx)
-    const imageBuffer = await ctx.markdownToImage.convertToImage(message);
-    session.send(h.image(imageBuffer, 'image/png'))
+  ctx.command('ts').action(async ({ session }) => {
+    const oldAnnouncement = await ctx.http.get('http://111.231.134.81/test.txt')
+    const newAnnouncement = await ctx.http.get('http://111.231.134.81/test2.txt')
+    const result = Diff.myersDiff(oldAnnouncement, newAnnouncement);
+    // 筛选出type不为equal的元素
+    const filteredResult = result.filter(item => item.type !== 'equal');
+    console.log(filteredResult)
+
+    // session.send(message)
   })
 }
