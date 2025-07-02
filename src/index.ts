@@ -10,9 +10,7 @@ import path from 'path'
 
 export const name = 'dwrg'
 let fileInstance: file
-export const inject = {
-  require: ['http', 'markdownToImage']
-}
+export const inject = ['http', 'markdownToImage']
 export {Config}
 
 export function apply(ctx: Context, cfg: Config) {
