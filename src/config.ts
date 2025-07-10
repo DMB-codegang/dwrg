@@ -1,10 +1,10 @@
 import { Schema } from 'koishi'
 import { sourceType } from './type'
-import { scheduler } from 'timers/promises'
 
 type channelsType = {
   id: string
   resType: 'all' | 'increment'// 推送方法类型(全量更新与增量更新)
+  remark: string // 备注
 }
 
 export interface Config {
@@ -38,7 +38,8 @@ export const Config: Schema<Config> = Schema.intersect([
           resType: Schema.union([
             Schema.const('all').description('全量更新'),
             Schema.const('increment').description('增量更新').experimental()
-          ]).description('推送方法类型')
+          ]).description('推送方法类型'),
+          remark: Schema.string().description('备注')
         })
       ).description('推送频道列表').role('table')
     }),

@@ -69,7 +69,7 @@ export class ScheduleManager {
                     }
                     const image = await this.ctx.markdownToImage.convertToImage(resMessage)
                     await this.ctx.bots[0].sendMessage(channelId.id, h.image(image, 'image/png'))
-                    this.ctx.logger('dwrg').info(`已推送消息到频道 ${channelId}`)
+                    this.ctx.logger('dwrg').info(`已推送消息到频道 ${channelId.id}`)
                 }
             }
         } catch (error) {
