@@ -8,14 +8,14 @@ export class source {
     static async getNotice(ctx: Context): Promise<string> {
         let res: string = await ctx.http.get('https://h55.update.netease.com/h55_notice_version2.txt')
         // 在文本中</t>前插入字符串（正式服）
-        res = res.replace(/<t>(.*?)<\/t>/g, '（正式服）')
+        res = res.replace(/<\/t>/g, '（正式服）</t>')
         res = await this.NoticeToMarkdown_v2(res)
         return res
     }
 
     static async getTestNotice(ctx: Context): Promise<string> {
         let res: string = await ctx.http.get('https://h55.update.netease.com/h55_notice_gongyan_version2.txt')
-        res = res.replace(/<t>(.*?)<\/t>/g, '（共研服）')
+        res = res.replace(/<\/t>/g, '（共研服）</t>')
         res = await this.NoticeToMarkdown_v2(res)
         return res
     }
