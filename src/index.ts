@@ -1,4 +1,4 @@
-import { Context } from 'koishi'
+import { Bot, Context } from 'koishi'
 import { } from 'koishi-plugin-markdown-to-image-service';
 
 import { registerCommand } from './command';
@@ -14,12 +14,12 @@ export {Config}
 
 export function apply(ctx: Context, cfg: Config) {
   fileInstance = new file(path.join(ctx.baseDir, 'data', 'dwrg'))
+  const bot = ctx.bots[0]
 
   if (cfg.schedule_enable && cfg.schedule_channels.length) {
-    ScheduleManager.start(ctx, cfg, fileInstance)
+    ScheduleManager.start(ctx, bot, cfg, fileInstance)
     // 插件卸载时停止定时任务
     ctx.on('dispose', () => ScheduleManager.stop())
   }
-
-  registerCommand(ctx)
+  registerCommand(ctx, bot)
 }

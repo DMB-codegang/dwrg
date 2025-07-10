@@ -1,7 +1,7 @@
-import { Context, h } from 'koishi'
+import { Bot, Context, h } from 'koishi'
 import { source } from '../source'
 
-export function registerCommand_dwts(ctx: Context) {
+export function registerCommand_dwts(ctx: Context, bot: Bot) {
     try{
     ctx.command('dwts').action(async ({ session }) => {
         const message = await source.getTestNotice(ctx)

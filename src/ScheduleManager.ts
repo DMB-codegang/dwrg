@@ -1,4 +1,4 @@
-import { Context, h } from 'koishi'
+import { Bot, Context, h } from 'koishi'
 import { } from 'koishi-plugin-markdown-to-image-service'
 
 import { Config } from './config'
@@ -11,11 +11,13 @@ export class ScheduleManager {
     private static timer: NodeJS.Timeout
     private static lastCheckTime = 0
     private static ctx: Context
+    private static bot: Bot
     private static cfg: Config
     private static fileInstance: file
 
-    static start(ctx: Context, cfg: Config, fileInstance: file) {
+    static start(ctx: Context, bot: Bot, cfg: Config, fileInstance: file) {
         this.ctx = ctx
+        this.bot = bot
         this.cfg = cfg
         this.fileInstance = fileInstance
         // 添加日志记录
@@ -69,7 +71,8 @@ export class ScheduleManager {
                     }
                     const image = await this.ctx.markdownToImage.convertToImage(resMessage)
                     await this.ctx.bots[0].sendMessage(channelId.id, h.image(image, 'image/png'))
-                    this.ctx.logger('dwrg').info(`已推送消息到频道 ${channelId.id}`)
+                    const group = await this.bot.getGuild(channelId.id)
+                    this.ctx.logger('dwrg').info(`已推送消息到频道 ${channelId.id}(${group.name})`)
                 }
             }
         } catch (error) {

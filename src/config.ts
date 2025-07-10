@@ -32,6 +32,7 @@ export const Config: Schema<Config> = Schema.intersect([
     Schema.object({
       schedule_enable: Schema.const(true).required(),
       schedule_intervals: Schema.number().default(60).description('检查间隔(秒)'),
+      value: Schema.dynamic('choices').description('选择一个值。'),
       schedule_channels: Schema.array(
         Schema.object({
           id: Schema.string().description('频道ID'),

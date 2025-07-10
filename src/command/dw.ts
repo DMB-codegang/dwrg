@@ -1,11 +1,10 @@
-import { Context, h } from 'koishi'
+import { Bot, Context, h } from 'koishi'
 import { source } from '../source'
 
-export function registerCommand_dw(ctx: Context) {
+export function registerCommand_dw(ctx: Context, bot: Bot) {
     ctx.command('dw').action(async ({ session }) => {
         try {
             const message = await source.getNotice(ctx)
-            session.send(message)
             const imageBuffer = await ctx.markdownToImage.convertToImage(message);
             session.send(h.image(imageBuffer, 'image/png'))
         } catch (error) {
